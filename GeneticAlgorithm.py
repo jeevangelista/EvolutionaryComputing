@@ -35,8 +35,9 @@ class GeneticAlgorithm:
   # args and kwargs: additional fitness function parameters
   def tournament(self, population, tour_size, top, maximum=False, *args, **kwargs):
     # draw random mates from the population of size tour_size without replacement
+    chrom_len = len(population[0])
     mates = np.random.choice(len(population), tour_size, replace=False)
-    parents =  np.zeros(shape=(top,len(population[0])),dtype=type(population[0][0]))
+    parents =  np.zeros(shape=(top,chrom_len),dtype=type(population[0][0]))
     mate_fitness = dict()
     # keys are mates and values are their respective fitness score
     for mate in mates:
@@ -60,18 +61,19 @@ class GeneticAlgorithm:
       raise ValueError("WTF is wrong with you? Can't have child with \
                         3 parents! Kidding, not yet supported :P")
     elif len(parents) == 2:
-      offsprings =  np.zeros(shape=(len(parents),len(parents[0])),dtype=type(parents[0][0]))
+      chrom_len = len(parents[0])
+      offsprings =  np.zeros(shape=(len(parents),chrom_len),dtype=type(parents[0][0]))
       if crosstype == self.CROSSTYPES:
         crosstype = np.random.randint(1,self.CROSSTYPES)
       if crosstype == 1:
-        point = np.random.randint(1,len(parents[0]))
+        point = np.random.randint(1,chrom_len)
         print(point)
         offsprings[0] = parents[0]
         offsprings[0][point:] = parents[1][point:]
         offsprings[1] = parents[1]
         offsprings[1][point:] = parents[0][point:]
       elif crosstype == 2:
-        points = np.random.choice(len(parents[0]), 2, replace=False)
+        points = np.random.choice(chrom_len, 2, replace=False)
         points.sort()
         print(points)
         offsprings[0] = parents[0]
@@ -79,12 +81,14 @@ class GeneticAlgorithm:
         offsprings[1] = parents[1]
         offsprings[1][points[0]:points[1]] = parents[0][points[0]:points[1]]
       elif crosstype == 3:
-        crossrate = np.random.uniform(size=len(parents[0]))
+        crossrate = np.random.uniform(size=chrom_len)
         print(crossrate)
         offsprings[0] = parents[0]
         offsprings[0][crossrate>0.5] = parents[1][crossrate>0.5]
         offsprings[1] = parents[1]
         offsprings[1][crossrate>0.5] = parents[0][crossrate>0.5]
+      else:
+        raise ValueError("Invalid Crosstype!")
     return offsprings
 
 
