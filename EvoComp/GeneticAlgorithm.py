@@ -2,7 +2,6 @@ import numpy as np
 
 
 class GeneticAlgorithm:
-  fitness_function = None
   CROSSTYPES = 4
 
 	# low: lower bound of range unless high=None.
@@ -41,7 +40,7 @@ class GeneticAlgorithm:
     mate_fitness = dict()
     # keys are mates and values are their respective fitness score
     for mate in mates:
-      mate_fitness[mate] = fitness_function(population[mate], *args, **kwargs)
+      mate_fitness[mate] = self.fitness_function(population[mate], *args, **kwargs)
     # list of mates sorted by fitness
     mate_rank = sorted(mate_fitness, key=mate_fitness.__getitem__, reverse=maximum)
     for i in range(top):
@@ -54,9 +53,7 @@ class GeneticAlgorithm:
     best_score = -float("inf") if maximum else float("inf")
     curr_best = np.zeros(shape=(chrom_len),dtype=type(population[0][0]))
     for member in population:
-      score = fitness_function(member, *args, **kwargs)
-      print(score)
-      print(member)
+      score = self.fitness_function(member, *args, **kwargs)
       if maximum and score > best_score:
         best_score = score
         curr_best = member
@@ -83,7 +80,6 @@ class GeneticAlgorithm:
         crosstype = np.random.randint(1,self.CROSSTYPES)
       if crosstype == 1:
         point = np.random.randint(1,chrom_len)
-        print(point)
         offsprings[0] = parents[0]
         offsprings[0][point:] = parents[1][point:]
         offsprings[1] = parents[1]
@@ -91,14 +87,12 @@ class GeneticAlgorithm:
       elif crosstype == 2:
         points = np.random.choice(chrom_len, 2, replace=False)
         points.sort()
-        print(points)
         offsprings[0] = parents[0]
         offsprings[0][points[0]:points[1]] = parents[1][points[0]:points[1]]
         offsprings[1] = parents[1]
         offsprings[1][points[0]:points[1]] = parents[0][points[0]:points[1]]
       elif crosstype == 3:
         crossrate = np.random.uniform(size=chrom_len)
-        print(crossrate)
         offsprings[0] = parents[0]
         offsprings[0][crossrate>0.5] = parents[1][crossrate>0.5]
         offsprings[1] = parents[1]
@@ -108,12 +102,12 @@ class GeneticAlgorithm:
     return offsprings
 
 
-  # chromosome: the chromosome to mutate
+  # chrom: the chromosome to mutate
   #muttype: 1: simple pointwise mutation (SNP), 2: uniform mutation
-  def mutation(self, chromosome, muttype, low, high=None):
+  def mutation(self, chrom, muttype, low, high=None):
     dtype = type(low)
-    chrom_len = len(chromosome)
-    
+    chrom_len = len(chrom)
+    chromosome = np.copy(chrom)
     if not high:
       high = low
       low = 0
@@ -124,7 +118,6 @@ class GeneticAlgorithm:
 
     if muttype == 1:
       snp_loc = np.random.randint(chrom_len)
-      print(snp_loc)
       if dtype == int:
         if low == 0 and high == 2: # binary lang flip it
           chromosome[snp_loc] = 1 if chromosome[snp_loc] == 0 else 0
@@ -142,7 +135,6 @@ class GeneticAlgorithm:
     
     elif muttype == 2:
       mutrate = np.random.uniform(size=chrom_len)
-      print(mutrate)
       mut_loc = chromosome[mutrate>0.5]
       mut_len = len(mut_loc)
       if dtype == int:
