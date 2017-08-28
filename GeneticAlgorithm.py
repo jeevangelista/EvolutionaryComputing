@@ -92,8 +92,65 @@ class GeneticAlgorithm:
     return offsprings
 
 
-  def mutation(self):
-    pass
+  # chromosome: the chromosome to mutate
+  #muttype: 1: simple pointwise mutation (SNP), 2: uniform mutation
+  def mutation(self, chromosome, muttype, low, high=None):
+    dtype = type(low)
+    chrom_len = len(chromosome)
+    
+    if not high:
+      high = low
+      low = 0
+    if high < low:
+      raise ValueError("high < low")
+    if dtype not in (int, float):
+      raise ValueError("Wrong Datatype")
+
+    if muttype == 1:
+      snp_loc = np.random.randint(chrom_len)
+      print(snp_loc)
+      if dtype == int:
+        if low == 0 and high == 2: # binary lang flip it
+          chromosome[snp_loc] = 1 if chromosome[snp_loc] == 0 else 0
+        else:
+          snp_range = np.arange(low,high)
+          # To ensure it is not the same as previous nucleotide
+          snp = np.random.choice(snp_range, 2, replace=False)
+          chromosome[snp_loc] = snp[0] if not snp[0] == chromosome[snp_loc] else snp[1]
+      elif dtype == float:
+        snp = np.random.uniform(low, high)
+        # To ensure it is not the same as previous nucleotide
+        while snp == chromosome[snp_loc]:
+          snp = np.random.uniform(low, high)
+        chromosome[snp_loc] = snp
+    
+    elif muttype == 2:
+      mutrate = np.random.uniform(size=chrom_len)
+      print(mutrate)
+      mut_loc = chromosome[mutrate>0.5]
+      mut_len = len(mut_loc)
+      if dtype == int:
+        if low == 0 and high == 2: # binary lang flip it
+          for i in range(len(mut_loc)):
+            mut_loc[i] = 1 if mut_loc[i]==0 else 0
+          chromosome[mutrate>0.5] = mut_loc
+        else:
+          mutations = np.random.randint(low, high, size=mut_len)
+          mut_range = np.arange(low,high)
+          for i in range(mut_len):
+            if mutations[i] == mut_loc[i]:
+              mut = np.random.choice(mut_range, 2, replace=False) # para walang katulad
+              mutations[i] = mut[0] if not mut[0] == mut_loc[i] else mut[1]
+          chromosome[mutrate>0.5] = mutations
+      elif dtype == float:
+        mutations = np.random.uniform(low, high, size=mut_len)
+        for i in range(mut_len):
+          while mutations[i] == mut_loc[i]:
+            mutations[i] = np.random.uniform(low, high)
+        chromosome[mutrate>0.5] = mutations
+    else:
+      raise ValueError("Wrong mutation type")
+    return chromosome
 
 
   def __init__(self, fitness_function, crossover=None, mutation=None):
@@ -113,8 +170,12 @@ def fitness_function(chromosome):
 
 
 a = GeneticAlgorithm(fitness_function)
-pop = a.initialize_population(10,10, 2)
-parents = a.tournament(pop, 6, 2, maximum=False)
-print(parents)
-offsprings = a.crossover(parents,4)
-print(offsprings)
+pop = a.initialize_population(5,5, 1.0)
+#parents = a.tournament(pop, 6, 2, maximum=False)
+#print(parents)
+#offsprings = a.crossover(parents,4)
+#print(offsprings)
+chromosome = pop[0]
+print(chromosome)
+c = a.mutation(chromosome, 2, 1.0)
+print(c)
